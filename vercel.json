@@ -3,8 +3,8 @@
   "outputDirectory": ".next",
   "framework": "nextjs",
   "functions": {
-    "app/**/*.ts": {
-      "runtime": "@vercel/node"
+    "app/api/**/*.ts": {
+      "runtime": "@vercel/node@18"
     }
   },
   "rewrites": [
