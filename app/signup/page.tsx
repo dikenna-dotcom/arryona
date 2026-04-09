@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { auth } from "@/lib/firebase";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { useState, useEffect } from "react";
+import netlifyIdentity from 'netlify-identity-widget';
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -13,6 +12,10 @@ export default function Signup() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+
+  useEffect(() => {
+    netlifyIdentity.init();
+  }, []);
 
   const handleSignup = async () => {
     setError("");
@@ -34,7 +37,7 @@ export default function Signup() {
 
     setLoading(true);
     try {
-      await createUserWithEmailAndPassword(auth, email, password);
+      await netlifyIdentity.signup(email, password);
       router.push("/");
     } catch (err: any) {
       setError(err.message || "Failed to create account");

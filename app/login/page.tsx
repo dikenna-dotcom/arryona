@@ -1,8 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { auth } from "@/lib/firebase";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { useState, useEffect } from "react";
+import netlifyIdentity from 'netlify-identity-widget';
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -12,6 +11,10 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const router = useRouter();
+
+  useEffect(() => {
+    netlifyIdentity.init();
+  }, []);
 
   const handleLogin = async () => {
     setError("");
@@ -23,7 +26,7 @@ export default function Login() {
 
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      await netlifyIdentity.login(email, password);
       router.push("/");
     } catch (err: any) {
       setError(err.message || "Failed to login");

@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { auth } from "@/lib/firebase";
-import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import netlifyIdentity from 'netlify-identity-widget';
 import { useRouter } from "next/navigation";
 import { getSellerProfileDoc, loadSellerProfileLocal, saveSellerProfileLocal, SellerProfile } from "@/lib/seller";
 import { createSellerProduct, getSellerOrders, getSellerProducts, SellerOrder, SellerProduct } from "@/lib/marketplace";
@@ -10,7 +9,7 @@ import { uploadMultipleMedia, UploadedMedia } from "@/lib/media";
 
 export default function SellerDashboard() {
   const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<SellerProfile | null>(null);
   const [sellerProducts, setSellerProducts] = useState<SellerProduct[]>([]);
   const [sellerOrders, setSellerOrders] = useState<SellerOrder[]>([]);
@@ -27,14 +26,22 @@ export default function SellerDashboard() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (!currentUser) {
-        router.push("/seller");
-        return;
-      }
+    netlifyIdentity.init();
 
-      setUser(currentUser);
-      const profileDoc = await getSellerProfileDoc(currentUser.uid);
+    if (!netlifyIdentity.currentUser) {
+      router.push("/seller");
+      return;
+    }
+
+    setUser(netlifyIdentity.currentUser);
+
+    netlifyIdentity.on('logout', () => {
+      router.push("/seller");
+    });
+
+    // Load profile and data
+    const loadData = async () => {
+      const profileDoc = await getSellerProfileDoc(netlifyIdentity.currentUser.id);
       const profileData = profileDoc || loadSellerProfileLocal();
 
       if (!profileData || profileData.role !== "seller") {
@@ -47,7 +54,7 @@ export default function SellerDashboard() {
 
       try {
         const [products, orders] = await Promise.all([
-          getSellerProducts(currentUser.uid),
+          getSellerProducts(netlifyIdentity.currentUser.id),
           getSellerOrders(currentUser.uid),
         ]);
         setSellerProducts(products);

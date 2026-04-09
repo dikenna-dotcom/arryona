@@ -2,26 +2,29 @@
 
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { auth } from "@/lib/firebase";
-import { signOut, onAuthStateChanged, User } from "firebase/auth";
+import netlifyIdentity from 'netlify-identity-widget';
 
 export default function Navbar() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser);
-      setLoading(false);
+    netlifyIdentity.init();
+    setUser(netlifyIdentity.currentUser);
+    setLoading(false);
+
+    netlifyIdentity.on('login', () => {
+      setUser(netlifyIdentity.currentUser);
     });
 
-    return () => unsubscribe();
+    netlifyIdentity.on('logout', () => {
+      setUser(null);
+    });
   }, []);
 
   const handleLogout = async () => {
     try {
-      await signOut(auth);
-      setUser(null);
+      await netlifyIdentity.logout();
     } catch (error) {
       console.error("Logout error:", error);
     }
